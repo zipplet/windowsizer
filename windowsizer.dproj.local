@@ -1,0 +1,10 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<Transactions>
+    <Transaction>2018/01/14 12:56:00.000.744,C:\Users\zipplet\Documents\RAD Studio\Projects\Project1.dproj=E:\projects\windowsizer\windowsizer.dproj</Transaction>
+    <Transaction>2018/01/14 13:12:27.000.438,=E:\projects\windowsizer\Unit1.pas</Transaction>
+    <Transaction>2018/01/14 13:12:48.000.544,E:\projects\windowsizer\unitcommon.pas=E:\projects\windowsizer\Unit1.pas</Transaction>
+    <Transaction>2018/01/14 13:39:57.000.596,=E:\projects\windowsizer\Unit1.pas</Transaction>
+    <Transaction>2018/01/14 13:40:04.000.199,E:\projects\windowsizer\unitlaunch.pas=E:\projects\windowsizer\Unit1.pas</Transaction>
+  </Transactions>
+</BorlandProject>
