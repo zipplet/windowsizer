@@ -57,6 +57,7 @@ type
     windowHandle: tHWND;
     pid: cardinal;
     displayWidth, displayHeight: longint;
+    desiredWindowWidth, desiredWindowHeight: longint;
   end;
 
 var
@@ -268,4 +269,6 @@ initialization
   _state.borderSizeKnown := false;
   _state.windowHandle := INVALID_HANDLE_VALUE;
   _state.pid := 0;
+  _state.desiredWindowWidth := 0;
+  _state.desiredWindowHeight := 0;
 end.

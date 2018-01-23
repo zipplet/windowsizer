@@ -23,10 +23,26 @@ function NeedToFindWindow: boolean;
 function DoFindWindow: boolean;
 procedure GetDisplaySize;
 function MoveAndResizeWindow(movewindow: boolean): boolean;
+procedure CalculateDesiredWindowSize;
 
 implementation
 
 uses sysutils, windows, shellapi, mmsystem;
+
+{ ----------------------------------------------------------------------------
+  Calculate the desired size to resize the application window to
+  ---------------------------------------------------------------------------- }
+procedure CalculateDesiredWindowSize;
+begin
+  if _settings.clientResize then begin
+    _state.desiredWindowWidth := _settings.windowWidth + _state.borderWidth;
+    _state.desiredWindowHeight := _settings.windowHeight + _state.borderHeight;
+  end else begin
+    _state.desiredWindowWidth := _settings.windowWidth;
+    _state.desiredWindowHeight := _settings.windowHeight;
+  end;
+  DebugOut('Desired window size: ' + inttostr(_state.desiredWindowWidth) + ' x ' + inttostr(_state.desiredWindowHeight));
+end;
 
 { ----------------------------------------------------------------------------
   Resizes the application window to the desired size.
@@ -149,6 +165,9 @@ begin
   _state.borderWidth := (windowrect.Right - windowrect.Left) - (windowrectclient.Right - windowrectclient.Left);
   _state.borderHeight := (windowrect.Bottom - windowrect.Top) - (windowrectclient.Bottom - windowrectclient.Top);
   DebugOut('Border size: ' + inttostr(_state.borderWidth) + ' x ' + inttostr(_state.borderHeight));
+
+  // Recalculate desired window size
+  CalculateDesiredWindowSize;
 
   // Successfully retrieved window properties
   _state.windowHandle := handle;
