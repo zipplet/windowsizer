@@ -2,4 +2,5 @@ Win32
 __history
 windowsizer.ini
 *.dproj.local
+*.identcache
 
