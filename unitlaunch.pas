@@ -48,6 +48,10 @@ begin
       _state.desiredWindowHeight := round(fh);
     end;
     esDisplayScale: begin
+      fw := (_state.displayWidth / 100) * _settings.scale;
+      fh := (_state.displayHeight / 100) * _settings.scale;
+      _state.desiredWindowWidth := round(fw);
+      _state.desiredWindowHeight := round(fh);
     end;
   end;
 

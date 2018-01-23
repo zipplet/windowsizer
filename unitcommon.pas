@@ -44,6 +44,7 @@ type
     clientResize: boolean;
     scalingMethod: eScaling;
     scale: longint;
+    maintainAspectRatio: boolean;
   end;
 
   rState = record
@@ -196,6 +197,8 @@ begin
     exit;
   end;
 
+  _settings.maintainAspectRatio := ini.ReadBool('windowresize', 'maintainaspectratio', false);
+
   freeandnil(ini);
 
   // If the key was defined but is empty, it will not be set to GetCurrentDir()
@@ -261,6 +264,7 @@ initialization
   _settings.clientResize := false;
   _settings.scalingMethod := esDefined;
   _settings.scale := 0;
+  _settings.maintainAspectRatio := false;
 
   _state.windowX := 0;
   _state.windowY := 0;
