@@ -20,6 +20,9 @@ type
   // Window positioning options
   eMoveWindow = (emCentre, emFixed, emNone);
 
+  // Scaling options
+  eScaling = (esDefined, esWindowScale, esDisplayScale);
+
   rSettings = record
     configFileName: ansistring;
     programPath: ansistring;
@@ -39,6 +42,8 @@ type
     windowX: longint;
     windowY: longint;
     clientResize: boolean;
+    scalingMethod: eScaling;
+    scale: longint;
   end;
 
   rState = record
@@ -163,6 +168,30 @@ begin
   _settings.windowY := ini.ReadInteger('windowresize', 'windowy', 0);
   _settings.clientResize := ini.ReadBool('windowresize', 'clientresize', false);
 
+  _settings.scale := ini.ReadInteger('windowresize', 'scale', 0);
+  s := lowercase(ini.ReadString('windowresize', 'scalingmethod', ''));
+  if s = 'defined' then begin
+    _settings.scalingMethod := esDefined;
+  end else if s = 'windowscale' then begin
+    _settings.scalingMethod := esWindowScale;
+    if _settings.scale < 1 then begin
+      ErrorMessage('Invalid settings: windowresize->scale is not a legal value or not set (and required for scalingmethod=windowscale)');
+      freeandnil(ini);
+      exit;
+    end;
+  end else if s = 'displayscale' then begin
+    _settings.scalingMethod := esDisplayScale;
+    if _settings.scale < 1 then begin
+      ErrorMessage('Invalid settings: windowresize->scale is not a legal value or not set (and required for scalingmethod=displayscale)');
+      freeandnil(ini);
+      exit;
+    end;
+  end else begin
+    ErrorMessage('Invalid settings: windowresize->scalingmethod is not a legal value');
+    freeandnil(ini);
+    exit;
+  end;
+
   freeandnil(ini);
 
   // If the key was defined but is empty, it will not be set to GetCurrentDir()
@@ -226,6 +255,8 @@ initialization
   _settings.windowHeight := 0;
   _settings.lockWindow := false;
   _settings.clientResize := false;
+  _settings.scalingMethod := esDefined;
+  _settings.scale := 0;
 
   _state.windowX := 0;
   _state.windowY := 0;
