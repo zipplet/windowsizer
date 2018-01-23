@@ -21,10 +21,20 @@ function FindProgramWindow(matchPID: boolean; pid: cardinal; matchName: boolean;
 function WindowTitlesMatch(windowtitle: ansistring; mask: ansistring): boolean;
 function NeedToFindWindow: boolean;
 function DoFindWindow: boolean;
+procedure GetDisplaySize;
 
 implementation
 
 uses sysutils, windows, shellapi, mmsystem;
+
+{ ----------------------------------------------------------------------------
+  Get the display size and set _state.displayWidth / _state.displayHeight
+  ---------------------------------------------------------------------------- }
+procedure GetDisplaySize;
+begin
+  _state.displayWidth := GetSystemMetrics(SM_CXFULLSCREEN);
+  _state.displayHeight := GetSystemMetrics(SM_CYFULLSCREEN);
+end;
 
 { ----------------------------------------------------------------------------
   Do we need to find the target window?
@@ -49,9 +59,6 @@ end;
 function DoFindWindow: boolean;
 var
   handle: hwnd;
-  newx, newy: longint;
-  screenw, screenh: longint;
-  newwindoww, newwindowh: longint;
   windowrect: trect;
   windowrectclient: trect;
 begin
@@ -220,7 +227,6 @@ end;
 function TryWindowResize(movewindow: boolean): boolean;
 var
   newx, newy: longint;
-  screenw, screenh: longint;
   newwindoww, newwindowh: longint;
   windowrect: trect;
 begin
@@ -234,15 +240,17 @@ begin
     newwindowh := _settings.windowHeight;
   end;
 
+  // Need to initialise newx / newy with something even if we don't move the window
+  newx := 0;
+  newy := 0;
+
   if movewindow then begin
     if _settings.moveWindow = emFixed then begin
       newx := _settings.windowX;
       newy := _settings.windowY;
     end else if _settings.moveWindow = emCentre then begin
-      screenw := GetSystemMetrics(SM_CXFULLSCREEN);
-      screenh := GetSystemMetrics(SM_CYFULLSCREEN);
-      newx := (screenw div 2) - (newwindoww div 2);
-      newy := (screenh div 2) - (newwindowh div 2);
+      newx := (_state.displayWidth div 2) - (newwindoww div 2);
+      newy := (_state.displayHeight div 2) - (newwindowh div 2);
       if (newx < 0) then begin
         newx := 0;
       end;
@@ -340,7 +348,6 @@ end;
   ---------------------------------------------------------------------------- }
 function WindowTitlesMatch(windowtitle: ansistring; mask: ansistring): boolean;
 var
-  i: longint;
   s: ansistring;
 begin
   result := false;
@@ -413,7 +420,6 @@ end;
 function EnsureWindowLock(movewindow: boolean): boolean;
 var
   newx, newy: longint;
-  screenw, screenh: longint;
   windowrect: trect;
   needAdjustment: boolean;
 begin
@@ -436,15 +442,20 @@ begin
     needAdjustment := true;
   end;
 
+  // If we don't need to do anything, bail
+  if not needAdjustment then exit;
+
+  // Need to initialise newx / newy even if we don't use them
+  newx := 0;
+  newy := 0;
+
   if movewindow then begin
     if _settings.moveWindow = emFixed then begin
       newx := _settings.windowX;
       newy := _settings.windowY;
     end else if _settings.moveWindow = emCentre then begin
-      screenw := GetSystemMetrics(SM_CXFULLSCREEN);
-      screenh := GetSystemMetrics(SM_CYFULLSCREEN);
-      newx := (screenw div 2) - (_settings.windowWidth div 2);
-      newy := (screenh div 2) - (_settings.windowHeight div 2);
+      newx := (_state.displayWidth div 2) - (_settings.windowWidth div 2);
+      newy := (_state.displayHeight div 2) - (_settings.windowHeight div 2);
     end else begin
       ErrorMessage('Internal error in EnsureWindowLock: movewindow mode invalid');
       halt;

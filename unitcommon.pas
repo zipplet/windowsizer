@@ -56,6 +56,7 @@ type
     borderSizeKnown: boolean;
     windowHandle: tHWND;
     pid: cardinal;
+    displayWidth, displayHeight: longint;
   end;
 
 var

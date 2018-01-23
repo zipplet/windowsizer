@@ -39,6 +39,8 @@ begin
       ErrorMessage('Failed to load settings; please check the configuration file.');
       halt;
     end;
+    GetDisplaySize;
+    DebugOut('Useable display area: ' + inttostr(_state.displayWidth) + ' x ' + inttostr(_state.displayHeight));
     DebugOut('*** Launching program ***');
     LaunchProgram;
     DebugOut('*** Program finished, exiting ***');
