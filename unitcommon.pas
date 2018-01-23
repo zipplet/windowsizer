@@ -45,6 +45,7 @@ type
     scalingMethod: eScaling;
     scale: longint;
     maintainAspectRatio: boolean;
+    aspectRatio: single;
   end;
 
   rState = record
@@ -61,6 +62,7 @@ type
     desiredWindowWidth, desiredWindowHeight: longint;
     originalSizeKnown: boolean;
     originalWindowWidth, originalWindowHeight: longint;
+    originalWindowClientWidth, originalWindowClientHeight: longint;
   end;
 
 var
@@ -104,6 +106,7 @@ function LoadSettings: boolean;
 var
   ini: tinifile;
   s: ansistring;
+  i, w, h: longint;
 begin
   result := false;
 
@@ -206,6 +209,43 @@ begin
 
   _settings.maintainAspectRatio := ini.ReadBool('windowresize', 'maintainaspectratio', false);
 
+  s := ini.ReadString('windowresize', 'aspectratio', '');
+  if s = '' then begin
+    // Auto detect
+    _settings.aspectRatio := 0;
+  end else begin
+    // Is it a string of the format "4:3" etc?
+    i := pos(':', s);
+    if (i > 1) and (i < length(s)) then begin
+      try
+        w := strtoint(copy(s, 1, i - 1));
+        h := strtoint(copy(s, i + 1, length(s) - i));
+        _settings.aspectRatio := w;
+        _settings.aspectRatio := _settings.aspectRatio / h;
+      except
+        on e: exception do begin
+          ErrorMessage('Invalid settings: windowresize->aspectratio is not a legal value');
+          freeandnil(ini);
+          exit;
+        end;
+      end;
+    end else if i = 0 then begin
+      try
+        _settings.aspectRatio := strtofloat(s);
+      except
+        on e: exception do begin
+          ErrorMessage('Invalid settings: windowresize->aspectratio is not a legal value');
+          freeandnil(ini);
+          exit;
+        end;
+      end;
+    end else begin
+      ErrorMessage('Invalid settings: windowresize->aspectratio is not a legal value');
+      freeandnil(ini);
+      exit;
+    end;
+  end;
+
   freeandnil(ini);
 
   // If the key was defined but is empty, it will not be set to GetCurrentDir()
@@ -286,5 +326,7 @@ initialization
   _state.desiredWindowHeight := 0;
   _state.originalWindowWidth := 0;
   _state.originalWindowHeight := 0;
+  _state.originalWindowClientWidth := 0;
+  _state.originalWindowClientHeight := 0;
   _state.originalSizeKnown := false;
 end.

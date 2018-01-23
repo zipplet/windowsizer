@@ -55,10 +55,15 @@ begin
         _state.desiredWindowWidth := round(fw);
         _state.desiredWindowHeight := round(fh);
       end else begin
-        aspectRatio := _state.originalWindowWidth / _state.originalWindowHeight;
-        DebugOut('Aspect ratio (w/h): ' + floattostr(aspectRatio));
+        if _settings.aspectRatio = 0 then begin
+          aspectRatio := _state.originalWindowClientWidth / _state.originalWindowClientHeight;
+          DebugOut('Aspect ratio [autodetect] (w/h): ' + floattostr(aspectRatio));
+        end else begin
+          aspectRatio := _settings.aspectRatio;
+          DebugOut('Aspect ratio [forced] (w/h): ' + floattostr(aspectRatio));
+        end;
         // Scale based on whichever axis is larger
-        if _state.originalWindowWidth > _state.originalWindowHeight then begin
+        if _state.originalWindowClientWidth > _state.originalWindowClientHeight then begin
           // Window is wide (more common)
           fh := (_state.displayHeight / 100) * _settings.scale;
           fw := fh * aspectRatio;
@@ -222,6 +227,9 @@ begin
     _state.originalWindowWidth := windowrect.Right - windowrect.Left;
     _state.originalWindowHeight := windowrect.Bottom - windowrect.Top;
     DebugOut('Original window size: ' + inttostr(_state.originalWindowWidth) + ' x ' + inttostr(_state.originalWindowHeight));
+    _state.originalWindowClientWidth := windowrectclient.Right - windowrectclient.Left;
+    _state.originalWindowClientHeight := windowrectclient.Bottom - windowrectclient.Top;
+    DebugOut('Original window client size: ' + inttostr(_state.originalWindowClientWidth) + ' x ' + inttostr(_state.originalWindowClientHeight));
   end;
 
   // Recalculate desired window size
