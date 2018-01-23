@@ -21,7 +21,7 @@ type
   eMoveWindow = (emCentre, emFixed, emNone);
 
   // Scaling options
-  eScaling = (esDefined, esWindowScale, esDisplayScale);
+  eScaling = (esDefined, esWindowScale, esDisplayScale, esPixelScale);
 
   rSettings = record
     configFileName: ansistring;
@@ -188,6 +188,13 @@ begin
     _settings.scalingMethod := esDisplayScale;
     if _settings.scale < 1 then begin
       ErrorMessage('Invalid settings: windowresize->scale is not a legal value or not set (and required for scalingmethod=displayscale)');
+      freeandnil(ini);
+      exit;
+    end;
+  end else if s = 'pixelscale' then begin
+    _settings.scalingMethod := esPixelScale;
+    if _settings.scale < 1 then begin
+      ErrorMessage('Invalid settings: windowresize->scale is not a legal value or not set (and required for scalingmethod=pixelscale)');
       freeandnil(ini);
       exit;
     end;

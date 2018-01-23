@@ -73,6 +73,12 @@ begin
         _state.desiredWindowHeight := round(fh);
       end;
     end;
+    esPixelScale: begin
+      fw := (_settings.windowWidth / 100) * _settings.scale;
+      fh := (_settings.windowHeight / 100) * _settings.scale;
+      _state.desiredWindowWidth := round(fw);
+      _state.desiredWindowHeight := round(fh);
+    end;
   end;
 
   // In client resize mode, add the border sizes to the desired size so that we
