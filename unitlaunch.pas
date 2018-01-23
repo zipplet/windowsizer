@@ -35,6 +35,7 @@ uses sysutils, windows, shellapi, mmsystem;
 procedure CalculateDesiredWindowSize;
 var
   fw, fh: single;
+  aspectRatio: single;
 begin
   case _settings.scalingMethod of
     esDefined: begin
@@ -48,10 +49,29 @@ begin
       _state.desiredWindowHeight := round(fh);
     end;
     esDisplayScale: begin
-      fw := (_state.displayWidth / 100) * _settings.scale;
-      fh := (_state.displayHeight / 100) * _settings.scale;
-      _state.desiredWindowWidth := round(fw);
-      _state.desiredWindowHeight := round(fh);
+      if not _settings.maintainAspectRatio then begin
+        fw := (_state.displayWidth / 100) * _settings.scale;
+        fh := (_state.displayHeight / 100) * _settings.scale;
+        _state.desiredWindowWidth := round(fw);
+        _state.desiredWindowHeight := round(fh);
+      end else begin
+        aspectRatio := _state.originalWindowWidth / _state.originalWindowHeight;
+        DebugOut('Aspect ratio (w/h): ' + floattostr(aspectRatio));
+        // Scale based on whichever axis is larger
+        if _state.originalWindowWidth > _state.originalWindowHeight then begin
+          // Window is wide (more common)
+          fh := (_state.displayHeight / 100) * _settings.scale;
+          fw := fh * aspectRatio;
+          DebugOut('Wide window');
+        end else begin
+          // Window is tall (less common)
+          fw := (_state.displayWidth / 100) * _settings.scale;
+          fh := fw / aspectRatio;
+          DebugOut('Tall window');
+        end;
+        _state.desiredWindowWidth := round(fw);
+        _state.desiredWindowHeight := round(fh);
+      end;
     end;
   end;
 
