@@ -33,15 +33,43 @@ uses sysutils, windows, shellapi, mmsystem;
   Calculate the desired size to resize the application window to
   ---------------------------------------------------------------------------- }
 procedure CalculateDesiredWindowSize;
+var
+  fw, fh: single;
 begin
-  if _settings.clientResize then begin
-    _state.desiredWindowWidth := _settings.windowWidth + _state.borderWidth;
-    _state.desiredWindowHeight := _settings.windowHeight + _state.borderHeight;
-  end else begin
-    _state.desiredWindowWidth := _settings.windowWidth;
-    _state.desiredWindowHeight := _settings.windowHeight;
+  case _settings.scalingMethod of
+    esDefined: begin
+      _state.desiredWindowWidth := _settings.windowWidth;
+      _state.desiredWindowHeight := _settings.windowHeight;
+    end;
+    esWindowScale: begin
+      fw := (_state.originalWindowWidth / 100) * _settings.scale;
+      fh := (_state.originalWindowHeight / 100) * _settings.scale;
+      _state.desiredWindowWidth := round(fw);
+      _state.desiredWindowHeight := round(fh);
+    end;
+    esDisplayScale: begin
+    end;
   end;
+
+  // In client resize mode, add the border sizes to the desired size so that we
+  // are adjusting the size of the client area.
+  if _settings.clientResize then begin
+    inc(_state.desiredWindowWidth, _state.borderWidth);
+    inc(_state.desiredWindowHeight, _state.borderHeight);
+  end;
+
   DebugOut('Desired window size: ' + inttostr(_state.desiredWindowWidth) + ' x ' + inttostr(_state.desiredWindowHeight));
+
+  // Crop window if too large
+  if _state.desiredWindowWidth > _state.displayWidth then begin
+    DebugOut('Warning: Desired window width is wider than the display; cropping');
+    _state.desiredWindowWidth := _state.displayWidth;
+  end;
+
+  if _state.desiredWindowHeight > _state.displayHeight then begin
+    DebugOut('Warning: Desired window height is taller than the display; cropping');
+    _state.desiredWindowHeight := _state.displayHeight;
+  end;
 end;
 
 { ----------------------------------------------------------------------------
@@ -52,18 +80,9 @@ end;
 function MoveAndResizeWindow(movewindow: boolean): boolean;
 var
   newx, newy: longint;
-  newwindoww, newwindowh: longint;
   windowrect: trect;
 begin
   result := false;
-
-  if _settings.clientResize then begin
-    newwindoww := _settings.windowWidth + _state.borderWidth;
-    newwindowh := _settings.windowHeight + _state.borderHeight;
-  end else begin
-    newwindoww := _settings.windowWidth;
-    newwindowh := _settings.windowHeight;
-  end;
 
   // Need to initialise newx / newy with something even if we don't move the window
   newx := 0;
@@ -74,26 +93,28 @@ begin
       newx := _settings.windowX;
       newy := _settings.windowY;
     end else if _settings.moveWindow = emCentre then begin
-      newx := (_state.displayWidth div 2) - (newwindoww div 2);
-      newy := (_state.displayHeight div 2) - (newwindowh div 2);
+      newx := (_state.displayWidth div 2) - (_state.desiredWindowWidth div 2);
+      newy := (_state.displayHeight div 2) - (_state.desiredWindowHeight div 2);
       if (newx < 0) then begin
+        DebugOut('Warning: Window would have been offscreen (new X position = ' + inttostr(newx));
         newx := 0;
       end;
       if (newy < 0) then begin
+        DebugOut('Warning: Window would have been offscreen (new Y position = ' + inttostr(newy));
         newy := 0;
       end;
     end else begin
       ErrorMessage('Internal error in MoveAndResizeWindow: movewindow mode invalid');
       halt;
     end;
-    if SetWindowPos(_state.windowHandle, HWND_TOP, newx, newy, newwindoww, newwindowh, SWP_NOACTIVATE or SWP_NOZORDER) then begin
+    if SetWindowPos(_state.windowHandle, HWND_TOP, newx, newy, _state.desiredWindowWidth, _state.desiredWindowHeight, SWP_NOACTIVATE or SWP_NOZORDER) then begin
       result := true;
     end else begin
       // Lost window handle
       _state.windowHandle := INVALID_HANDLE_VALUE;
     end;
   end else begin
-    if SetWindowPos(_state.windowHandle, HWND_TOP, 0, 0, newwindoww, newwindowh, SWP_NOMOVE or SWP_NOACTIVATE or SWP_NOZORDER) then begin
+    if SetWindowPos(_state.windowHandle, HWND_TOP, 0, 0, _state.desiredWindowWidth, _state.desiredWindowHeight, SWP_NOMOVE or SWP_NOACTIVATE or SWP_NOZORDER) then begin
       result := true;
     end else begin
       // Lost window handle
@@ -165,6 +186,13 @@ begin
   _state.borderWidth := (windowrect.Right - windowrect.Left) - (windowrectclient.Right - windowrectclient.Left);
   _state.borderHeight := (windowrect.Bottom - windowrect.Top) - (windowrectclient.Bottom - windowrectclient.Top);
   DebugOut('Border size: ' + inttostr(_state.borderWidth) + ' x ' + inttostr(_state.borderHeight));
+
+  if not _state.originalSizeKnown then begin
+    // Save original window size
+    _state.originalWindowWidth := windowrect.Right - windowrect.Left;
+    _state.originalWindowHeight := windowrect.Bottom - windowrect.Top;
+    DebugOut('Original window size: ' + inttostr(_state.originalWindowWidth) + ' x ' + inttostr(_state.originalWindowHeight));
+  end;
 
   // Recalculate desired window size
   CalculateDesiredWindowSize;

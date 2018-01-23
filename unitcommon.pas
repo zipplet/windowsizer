@@ -58,6 +58,8 @@ type
     pid: cardinal;
     displayWidth, displayHeight: longint;
     desiredWindowWidth, desiredWindowHeight: longint;
+    originalSizeKnown: boolean;
+    originalWindowWidth, originalWindowHeight: longint;
   end;
 
 var
@@ -271,4 +273,7 @@ initialization
   _state.pid := 0;
   _state.desiredWindowWidth := 0;
   _state.desiredWindowHeight := 0;
+  _state.originalWindowWidth := 0;
+  _state.originalWindowHeight := 0;
+  _state.originalSizeKnown := false;
 end.
