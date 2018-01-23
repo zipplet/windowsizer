@@ -22,10 +22,76 @@ function WindowTitlesMatch(windowtitle: ansistring; mask: ansistring): boolean;
 function NeedToFindWindow: boolean;
 function DoFindWindow: boolean;
 procedure GetDisplaySize;
+function MoveAndResizeWindow(movewindow: boolean): boolean;
 
 implementation
 
 uses sysutils, windows, shellapi, mmsystem;
+
+{ ----------------------------------------------------------------------------
+  Resizes the application window to the desired size.
+  If <movewindow> is true, the window is also moved.
+  Returns TRUE on success, FALSE on failure.
+  ---------------------------------------------------------------------------- }
+function MoveAndResizeWindow(movewindow: boolean): boolean;
+var
+  newx, newy: longint;
+  newwindoww, newwindowh: longint;
+  windowrect: trect;
+begin
+  result := false;
+
+  if _settings.clientResize then begin
+    newwindoww := _settings.windowWidth + _state.borderWidth;
+    newwindowh := _settings.windowHeight + _state.borderHeight;
+  end else begin
+    newwindoww := _settings.windowWidth;
+    newwindowh := _settings.windowHeight;
+  end;
+
+  // Need to initialise newx / newy with something even if we don't move the window
+  newx := 0;
+  newy := 0;
+
+  if movewindow then begin
+    if _settings.moveWindow = emFixed then begin
+      newx := _settings.windowX;
+      newy := _settings.windowY;
+    end else if _settings.moveWindow = emCentre then begin
+      newx := (_state.displayWidth div 2) - (newwindoww div 2);
+      newy := (_state.displayHeight div 2) - (newwindowh div 2);
+      if (newx < 0) then begin
+        newx := 0;
+      end;
+      if (newy < 0) then begin
+        newy := 0;
+      end;
+    end else begin
+      ErrorMessage('Internal error in MoveAndResizeWindow: movewindow mode invalid');
+      halt;
+    end;
+    if SetWindowPos(_state.windowHandle, HWND_TOP, newx, newy, newwindoww, newwindowh, SWP_NOACTIVATE or SWP_NOZORDER) then begin
+      result := true;
+    end else begin
+      // Lost window handle
+      _state.windowHandle := INVALID_HANDLE_VALUE;
+    end;
+  end else begin
+    if SetWindowPos(_state.windowHandle, HWND_TOP, 0, 0, newwindoww, newwindowh, SWP_NOMOVE or SWP_NOACTIVATE or SWP_NOZORDER) then begin
+      result := true;
+    end else begin
+      // Lost window handle
+      _state.windowHandle := INVALID_HANDLE_VALUE;
+    end;
+  end;
+
+  // Get and save new window size
+  GetWindowRect(_state.windowHandle, windowrect);
+  _state.windowX := windowrect.Left;
+  _state.windowY := windowrect.Top;
+  _state.windowWidth := windowrect.Right - windowrect.Left;
+  _state.windowHeight := windowrect.Bottom - windowrect.Top;
+end;
 
 { ----------------------------------------------------------------------------
   Get the display size and set _state.displayWidth / _state.displayHeight
@@ -127,7 +193,7 @@ begin
   // Record PID for later
   _state.pid := processinfo.dwProcessId;
 
-  DebugOut('Program started');
+  DebugOut('Program started, PID = ' + inttostr(_state.pid));
   currenttime := 0;
 
   // Waiting for first resize
@@ -225,66 +291,10 @@ end;
   Try to resize the target window. Returns TRUE on success.
   ---------------------------------------------------------------------------- }
 function TryWindowResize(movewindow: boolean): boolean;
-var
-  newx, newy: longint;
-  newwindoww, newwindowh: longint;
-  windowrect: trect;
 begin
-  result := false;
-
-  if _settings.clientResize then begin
-    newwindoww := _settings.windowWidth + _state.borderWidth;
-    newwindowh := _settings.windowHeight + _state.borderHeight;
-  end else begin
-    newwindoww := _settings.windowWidth;
-    newwindowh := _settings.windowHeight;
-  end;
-
-  // Need to initialise newx / newy with something even if we don't move the window
-  newx := 0;
-  newy := 0;
-
-  if movewindow then begin
-    if _settings.moveWindow = emFixed then begin
-      newx := _settings.windowX;
-      newy := _settings.windowY;
-    end else if _settings.moveWindow = emCentre then begin
-      newx := (_state.displayWidth div 2) - (newwindoww div 2);
-      newy := (_state.displayHeight div 2) - (newwindowh div 2);
-      if (newx < 0) then begin
-        newx := 0;
-      end;
-      if (newy < 0) then begin
-        newy := 0;
-      end;
-    end else begin
-      ErrorMessage('Internal error in TryWindowResize: movewindow mode invalid');
-      halt;
-    end;
-    if SetWindowPos(_state.windowHandle, HWND_TOP, newx, newy, newwindoww, newwindowh, SWP_NOACTIVATE or SWP_NOZORDER) then begin
-      DebugOut('Successfully resized and moved window');
-      result := true;
-    end else begin
-      // Lost window handle
-      _state.windowHandle := INVALID_HANDLE_VALUE;
-    end;
-  end else begin
-    if SetWindowPos(_state.windowHandle, HWND_TOP, 0, 0, newwindoww, newwindowh, SWP_NOMOVE or SWP_NOACTIVATE or SWP_NOZORDER) then begin
-      DebugOut('Successfully resized window');
-      result := true;
-    end else begin
-      // Lost window handle
-      _state.windowHandle := INVALID_HANDLE_VALUE;
-    end;
-  end;
-
-  // Get and save new window size
-  GetWindowRect(_state.windowHandle, windowrect);
-  _state.windowX := windowrect.Left;
-  _state.windowY := windowrect.Top;
-  _state.windowWidth := windowrect.Right - windowrect.Left;
-  _state.windowHeight := windowrect.Bottom - windowrect.Top;
-  DebugOut('New window position: ' + inttostr(_state.windowX) + ', ' + inttostr(_state.windowY) + ' - ' + inttostr(_state.windowWidth) + ', ' + inttostr(_state.windowHeight));
+  // Move and resize application window
+  result := MoveAndResizeWindow(movewindow);
+  DebugOut('New window position: ' + inttostr(_state.windowX) + ', ' + inttostr(_state.windowY) + ' - ' + inttostr(_state.windowWidth) + ' x ' + inttostr(_state.windowHeight));
 end;
 
 { ----------------------------------------------------------------------------
@@ -419,7 +429,6 @@ end;
   ---------------------------------------------------------------------------- }
 function EnsureWindowLock(movewindow: boolean): boolean;
 var
-  newx, newy: longint;
   windowrect: trect;
   needAdjustment: boolean;
 begin
@@ -445,42 +454,8 @@ begin
   // If we don't need to do anything, bail
   if not needAdjustment then exit;
 
-  // Need to initialise newx / newy even if we don't use them
-  newx := 0;
-  newy := 0;
-
-  if movewindow then begin
-    if _settings.moveWindow = emFixed then begin
-      newx := _settings.windowX;
-      newy := _settings.windowY;
-    end else if _settings.moveWindow = emCentre then begin
-      newx := (_state.displayWidth div 2) - (_settings.windowWidth div 2);
-      newy := (_state.displayHeight div 2) - (_settings.windowHeight div 2);
-    end else begin
-      ErrorMessage('Internal error in EnsureWindowLock: movewindow mode invalid');
-      halt;
-    end;
-    if SetWindowPos(_state.windowHandle, HWND_TOP, newx, newy, _settings.windowWidth, _settings.windowHeight, SWP_NOACTIVATE or SWP_NOZORDER) then begin
-      result := true;
-    end else begin
-      // Lost window handle
-      _state.windowHandle := INVALID_HANDLE_VALUE;
-    end;
-  end else begin
-    if SetWindowPos(_state.windowHandle, HWND_TOP, 0, 0, _settings.windowWidth, _settings.windowHeight, SWP_NOMOVE or SWP_NOACTIVATE or SWP_NOZORDER) then begin
-      result := true;
-    end else begin
-      // Lost window handle
-      _state.windowHandle := INVALID_HANDLE_VALUE;
-    end;
-  end;
-
-  // Get and save new window size
-  GetWindowRect(_state.windowHandle, windowrect);
-  _state.windowX := windowrect.Left;
-  _state.windowY := windowrect.Top;
-  _state.windowWidth := windowrect.Right - windowrect.Left;
-  _state.windowHeight := windowrect.Bottom - windowrect.Top;
+  // Move and resize application window
+  result := MoveAndResizeWindow(movewindow);
 end;
 
 end.
