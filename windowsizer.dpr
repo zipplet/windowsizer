@@ -9,6 +9,13 @@
 
   Licensed under the MIT license; please see the LICENSE file for full license
   terms and conditions.
+
+  TODO list:
+  - Custom border size override
+  - Detect tall window with aspect ratio override
+  - Detect tall monitor (displayscale)
+  - Command line params support
+  - Use full display size for centre, etc
   ---------------------------------------------------------------------------- }
 program windowsizer;
 
@@ -40,7 +47,6 @@ begin
       halt;
     end;
     GetDisplaySize;
-    DebugOut('Useable display area: ' + inttostr(_state.displayWidth) + ' x ' + inttostr(_state.displayHeight));
     DebugOut('*** Launching program ***');
     LaunchProgram;
     DebugOut('*** Program finished, exiting ***');

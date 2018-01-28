@@ -170,8 +170,9 @@ end;
   ---------------------------------------------------------------------------- }
 procedure GetDisplaySize;
 begin
-  _state.displayWidth := GetSystemMetrics(SM_CXFULLSCREEN);
-  _state.displayHeight := GetSystemMetrics(SM_CYFULLSCREEN);
+  _state.displayWidth := GetSystemMetrics(SM_CXSCREEN);
+  _state.displayHeight := GetSystemMetrics(SM_CYSCREEN);
+  DebugOut('Display resolution: ' + inttostr(_state.displayWidth) + ' x ' + inttostr(_state.displayHeight));
 end;
 
 { ----------------------------------------------------------------------------
@@ -218,9 +219,15 @@ begin
   // Used for client dimension resizing mode
   GetWindowRect(handle, windowrect);
   GetClientRect(handle, windowrectclient);
-  _state.borderWidth := (windowrect.Right - windowrect.Left) - (windowrectclient.Right - windowrectclient.Left);
-  _state.borderHeight := (windowrect.Bottom - windowrect.Top) - (windowrectclient.Bottom - windowrectclient.Top);
-  DebugOut('Border size: ' + inttostr(_state.borderWidth) + ' x ' + inttostr(_state.borderHeight));
+  if _settings.autoDetectBorderSize then begin
+    _state.borderWidth := (windowrect.Right - windowrect.Left) - (windowrectclient.Right - windowrectclient.Left);
+    _state.borderHeight := (windowrect.Bottom - windowrect.Top) - (windowrectclient.Bottom - windowrectclient.Top);
+    DebugOut('Border size [autodetect]: ' + inttostr(_state.borderWidth) + ' x ' + inttostr(_state.borderHeight));
+  end else begin
+    _state.borderWidth := _settings.borderWidth;
+    _state.borderHeight := _settings.borderHeight;
+    DebugOut('Border size [forced]: ' + inttostr(_state.borderWidth) + ' x ' + inttostr(_state.borderHeight));
+  end;
 
   if not _state.originalSizeKnown then begin
     // Save original window size

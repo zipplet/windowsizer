@@ -46,6 +46,9 @@ type
     scale: longint;
     maintainAspectRatio: boolean;
     aspectRatio: single;
+    autoDetectBorderSize: boolean;
+    borderWidth: longint;
+    borderHeight: longint;
   end;
 
   rState = record
@@ -246,6 +249,10 @@ begin
     end;
   end;
 
+  _settings.autoDetectBorderSize := ini.ReadBool('tweaks', 'autodetectbordersize', true);
+  _settings.borderWidth := ini.ReadInteger('tweaks', 'borderwidth', -1);
+  _settings.borderHeight := ini.ReadInteger('tweaks', 'borderheight', -1);
+
   freeandnil(ini);
 
   // If the key was defined but is empty, it will not be set to GetCurrentDir()
@@ -284,6 +291,13 @@ begin
   if _settings.windowHeight <= 0 then begin
     ErrorMessage('Invalid settings: windowresize->windowheight is not greater than 0');
     exit;
+  end;
+
+  if not _settings.autoDetectBorderSize then begin
+    // Border must be defined
+    if (_settings.borderWidth < 0) or (_settings.borderHeight < 0) then begin
+      ErrorMessage('Invalid settings: tweaks->autodetectbordersize is 0, but tweaks->borderwidth and/or tweaks->borderheight are invalid or undefined');
+    end;
   end;
 
   // No need to validate windowx/windowy, they are allowed to be zero or negative
