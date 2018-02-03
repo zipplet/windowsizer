@@ -36,6 +36,7 @@ procedure CalculateDesiredWindowSize;
 var
   fw, fh: single;
   aspectRatio: single;
+  scaleWidth: boolean;
 begin
   case _settings.scalingMethod of
     esDefined: begin
@@ -64,15 +65,36 @@ begin
         end;
         // Scale based on whichever axis is larger
         if _state.originalWindowClientWidth > _state.originalWindowClientHeight then begin
-          // Window is wide (more common)
-          fh := (_state.displayHeight / 100) * _settings.scale;
-          fw := fh * aspectRatio;
-          DebugOut('Wide window');
+          // Window is wide
+          if _state.displayWidth > _state.displayHeight then begin
+            // Display is also wide, so scale on the height
+            scaleWidth := false;
+            DebugOut('Wide window / wide display');
+          end else begin
+            // Display is tall, so scale on the width
+            scaleWidth := true;
+            DebugOut('Wide window / tall display');
+          end;
         end else begin
-          // Window is tall (less common)
+          // Window is tall
+          if _state.displayWidth > _state.displayHeight then begin
+            // Display is wide, so scale on the width
+            scaleWidth := true;
+            DebugOut('Tall window / wide display');
+          end else begin
+            // Display is tall, so scale on the height
+            scaleWidth := false;
+            DebugOut('Tall window / tall display');
+          end;
+        end;
+        if scaleWidth then begin
+          DebugOut('Scaling to width');
           fw := (_state.displayWidth / 100) * _settings.scale;
           fh := fw / aspectRatio;
-          DebugOut('Tall window');
+        end else begin
+          DebugOut('Scaling to height');
+            fh := (_state.displayHeight / 100) * _settings.scale;
+            fw := fh * aspectRatio;
         end;
         _state.desiredWindowWidth := round(fw);
         _state.desiredWindowHeight := round(fh);
@@ -161,8 +183,13 @@ begin
   GetWindowRect(_state.windowHandle, windowrect);
   _state.windowX := windowrect.Left;
   _state.windowY := windowrect.Top;
-  _state.windowWidth := windowrect.Right - windowrect.Left;
-  _state.windowHeight := windowrect.Bottom - windowrect.Top;
+
+  // Bug fix: resize command might be ignored, so set the window width / height to what we attempted to set
+  // if the call fails, we will end up trying again
+  _state.windowWidth := _state.desiredWindowWidth;
+  _state.windowHeight := _state.desiredWindowHeight;
+  //_state.windowWidth := windowrect.Right - windowrect.Left;
+  //_state.windowHeight := windowrect.Bottom - windowrect.Top;
 end;
 
 { ----------------------------------------------------------------------------
