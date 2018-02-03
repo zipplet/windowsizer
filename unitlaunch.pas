@@ -36,6 +36,7 @@ procedure CalculateDesiredWindowSize;
 var
   fw, fh: single;
   aspectRatio: single;
+  allowedw, allowedh: longint;
 begin
   case _settings.scalingMethod of
     esDefined: begin
@@ -63,14 +64,25 @@ begin
           DebugOut('Aspect ratio [forced] (w/h): ' + floattostr(aspectRatio));
         end;
 
+        // If using clientresize, subtract the border size from the display size
+        // to get the available scaling area, as we will add the border later
+        if _settings.clientResize then begin
+          allowedw := _state.displayWidth - _state.borderWidth;
+          allowedh := _state.displayHeight - _state.borderHeight;
+        end else begin
+          // If not using clientresize, available scaling area is the display.
+          allowedw := _state.displayWidth;
+          allowedh := _state.displayHeight;
+        end;
+
         // First scale to maximum width and see if that fits
-        fw := (_state.displayWidth / 100) * _settings.scale;
+        fw := (allowedw / 100) * _settings.scale;
         fh := fw / aspectRatio;
 
         // If the window is now too tall, scale by height instead
-        if round(fh) > _state.displayHeight then begin
+        if round(fh) > allowedh then begin
           DebugOut('Window too tall when scaled by width, scaling by height');
-            fh := (_state.displayHeight / 100) * _settings.scale;
+            fh := (allowedh / 100) * _settings.scale;
             fw := fh * aspectRatio;
         end;
 
