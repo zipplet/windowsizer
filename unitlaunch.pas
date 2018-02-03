@@ -36,7 +36,6 @@ procedure CalculateDesiredWindowSize;
 var
   fw, fh: single;
   aspectRatio: single;
-  scaleWidth: boolean;
 begin
   case _settings.scalingMethod of
     esDefined: begin
@@ -63,39 +62,18 @@ begin
           aspectRatio := _settings.aspectRatio;
           DebugOut('Aspect ratio [forced] (w/h): ' + floattostr(aspectRatio));
         end;
-        // Scale based on whichever axis is larger
-        if _state.originalWindowClientWidth > _state.originalWindowClientHeight then begin
-          // Window is wide
-          if _state.displayWidth > _state.displayHeight then begin
-            // Display is also wide, so scale on the height
-            scaleWidth := false;
-            DebugOut('Wide window / wide display');
-          end else begin
-            // Display is tall, so scale on the width
-            scaleWidth := true;
-            DebugOut('Wide window / tall display');
-          end;
-        end else begin
-          // Window is tall
-          if _state.displayWidth > _state.displayHeight then begin
-            // Display is wide, so scale on the width
-            scaleWidth := true;
-            DebugOut('Tall window / wide display');
-          end else begin
-            // Display is tall, so scale on the height
-            scaleWidth := false;
-            DebugOut('Tall window / tall display');
-          end;
-        end;
-        if scaleWidth then begin
-          DebugOut('Scaling to width');
-          fw := (_state.displayWidth / 100) * _settings.scale;
-          fh := fw / aspectRatio;
-        end else begin
-          DebugOut('Scaling to height');
+
+        // First scale to maximum width and see if that fits
+        fw := (_state.displayWidth / 100) * _settings.scale;
+        fh := fw / aspectRatio;
+
+        // If the window is now too tall, scale by height instead
+        if round(fh) > _state.displayHeight then begin
+          DebugOut('Window too tall when scaled by width, scaling by height');
             fh := (_state.displayHeight / 100) * _settings.scale;
             fw := fh * aspectRatio;
         end;
+
         _state.desiredWindowWidth := round(fw);
         _state.desiredWindowHeight := round(fh);
       end;
