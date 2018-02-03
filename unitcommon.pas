@@ -49,6 +49,7 @@ type
     autoDetectBorderSize: boolean;
     borderWidth: longint;
     borderHeight: longint;
+    scalingIgnoreBorderSize: boolean;
   end;
 
   rState = record
@@ -252,6 +253,7 @@ begin
   _settings.autoDetectBorderSize := ini.ReadBool('tweaks', 'autodetectbordersize', true);
   _settings.borderWidth := ini.ReadInteger('tweaks', 'borderwidth', -1);
   _settings.borderHeight := ini.ReadInteger('tweaks', 'borderheight', -1);
+  _settings.scalingIgnoreBorderSize := ini.ReadBool('tweaks', 'scalingignorebordersize', false);
 
   freeandnil(ini);
 
@@ -326,6 +328,7 @@ initialization
   _settings.scalingMethod := esDefined;
   _settings.scale := 0;
   _settings.maintainAspectRatio := false;
+  _settings.scalingIgnoreBorderSize := false;
 
   _state.windowX := 0;
   _state.windowY := 0;
