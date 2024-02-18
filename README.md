@@ -5,13 +5,6 @@ This tool allows you to forcefully resize the window of a game that does not all
 
 The older the game is, the more likely it is that this tool will work.
 
-## Usage
-* Grab the latest release. It will contain the binaries, template and profiles for various games.
-* Copy **windowsizer.exe** to the same folder as the game you wish to use it with
-* If a profile already exists for your game in the **configs** folder, copy it to your game folder and rename it to **windowsizer.ini**
-* ...otherwise copy **template.ini**, name it **windowsizer.ini** and edit it to suit your game
-* Run **windowsizer.exe** to launch your game with a resized window
-
 ## Screenshots
 **Kanon running at 2x scale**
 ![Kanon 2x scale](/assets/windowsizerkanon.png)
@@ -19,10 +12,17 @@ The older the game is, the more likely it is that this tool will work.
 **Air running at 2x scale**
 ![Air 2x scale](/assets/windowsizerair.png)
 
-## Profiles (configs)
-Profiles for a few games I have been using this with are provided under the **configs** folder. They should work out of the box on Windows 10. If you would like to submit new profiles, please open a pull request or open an issue and attach your profile to it.
+## Usage
+* Grab the latest release. It will contain the binaries, template and profiles for various games.
+* Copy **windowsizer.exe** to the same folder as the game you wish to use it with
+* If a profile already exists for your game in the **configs** folder, copy it to your game folder and rename it to **windowsizer.ini**
+* ...otherwise copy **template.ini**, name it **windowsizer.ini** and edit it to suit your game
+* Run **windowsizer.exe** to launch your game with a resized window
 
-If you are editing a profile or making your own, you will find **windowsizer_debug.exe** helpful as it will show you what windowsizer is doing (for example the window size in pixels).
+## Profiles (configs)
+Profiles for a few games I have been using this with are provided under the **configs** folder. They should work out of the box on Windows 10. If you are editing a profile or making your own, you will find **windowsizer_debug.exe** helpful as it will show you what windowsizer is doing (for example the window size in pixels).
+
+If you would like to submit new profiles, please open a pull request or open an issue and attach your profile to it.
 
 ## Limitations
 * The game must be running in a window, not full screen.
